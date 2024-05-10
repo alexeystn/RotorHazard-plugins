@@ -1,0 +1,13 @@
+{
+    "name": "LED Effect: Numeric clock",
+    "author": "AlexeyStn",
+    "author_uri": "https://github.com/AlexeyStn",
+    "description": "Displays real time clock on 8x40 LED panel",
+    "info_uri": "https://github.com/RotorHazard/RotorHazard/",
+    "license": "RotorHazard",
+    "license_uri": "https://github.com/RotorHazard/RotorHazard/blob/main/LICENSE",
+    "version": "1.0.0",
+    "required_rhapi_version": "1.0",
+    "update_uri": null,
+    "text_domain": null
+}
