@@ -4,7 +4,6 @@ from eventmanager import Evt
 from led_event_manager import LEDEffect, LEDEvent, Color, ColorVal, ColorPattern, effect_delay
 import time
 import datetime
-import Config
 
 
 def decreaseBrightness(color):
@@ -50,7 +49,7 @@ def showColorCircles(args):
     else:
         color = ColorVal.WHITE
 
-    size = Config.LED['LED_ROWS']
+    size = args['RHAPI'].config.get_item('LED', 'LED_ROWS')
     args['size'] = size
     
     maxCount = strip.numPixels() // (size*size)
@@ -66,7 +65,7 @@ def showColorCircles(args):
         strip.setPixelColor(i, ColorVal.NONE)
          
     for i in range(count):
-        if Config.LED["PANEL_ROTATE"]:
+        if args['RHAPI'].config.get_item('LED', 'PANEL_ROTATE'):
             args['position'] = maxCount - 1 - i
         else:
             args['position'] = i

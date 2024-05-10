@@ -4,7 +4,6 @@ from eventmanager import Evt
 from led_event_manager import LEDEffect, LEDEvent, Color, ColorVal, ColorPattern, effect_delay
 import time
 import datetime
-import Config
 
 
 class Matrix:
@@ -147,15 +146,15 @@ class Matrix:
         self.matrix[2][position] = 1
         self.matrix[5][position] = 1
 
-    def display(self):
+    def display(self, args):
 
-        if Config.LED['PANEL_ROTATE']:
+        if args['RHAPI'].config.get_item('LED', 'PANEL_ROTATE'):
             self.matrix = [row[::-1] for row in self.matrix[::-1]]
 
         for x in range(40):
             for y in range(8):
                 pos = x * 8 + y
-                if Config.LED['INVERTED_PANEL_ROWS']:
+                if args['RHAPI'].config.get_item('LED', 'INVERTED_PANEL_ROWS'):
                     if x % 2:
                         pos = x * 8 + (8 - y - 1)
                 if self.matrix[y][x] == 1:
@@ -171,11 +170,11 @@ def realTimeClock(args):
     else:
         return False
  
-    if Config.LED['LED_COUNT'] < 8*40:
+    if args['RHAPI'].config.get_item('LED', 'LED_COUNT') < 8*40:
         return False
 
-    if 'CLOCK_COLOR' in Config.LED:
-        color_name = Config.LED['CLOCK_COLOR']
+    if args['RHAPI'].config.get_item('LED', 'CLOCK_COLOR'):
+        color_name = args['RHAPI'].config.get_item('LED', 'CLOCK_COLOR')
         if color_name == 'red':
             color = Color(255, 0, 0)
         elif color_name == 'green':
@@ -211,7 +210,7 @@ def realTimeClock(args):
         clock.putCharacter(second//10, 28)
         clock.putCharacter(second%10, 34)
 
-        clock.display() 
+        clock.display(args) 
         effect_delay(10, args)
         strip.show()
 
@@ -223,7 +222,7 @@ def goText(args):
     else:
         return False
  
-    if Config.LED['LED_COUNT'] < 8*40:
+    if args['RHAPI'].config.get_item('LED', 'LED_COUNT') < 8*40:
         return False
 
     text = Matrix(strip, args['color'])
@@ -231,7 +230,7 @@ def goText(args):
     text.putCharacter('G', 10)
     text.putCharacter('O', 19)
     text.putCharacter('!', 28)
-    text.display()
+    text.display(args)
     strip.show()
 
 
