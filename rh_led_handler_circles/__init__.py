@@ -76,10 +76,10 @@ def showColorCircles(args):
 def stagingCircles(args):
 
     triggers = args['staging_tones']
-    args['count'] = 1
+    args['count'] = 0
     args['effect_fn'](args)
 
-    for i in range(1, triggers):
+    for i in range(0, triggers):
         args['count'] = i + 1
         effect_delay(1000, args)
         args['effect_fn'](args)
