@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <FastLED.h>
 #include <EEPROM.h>
+#include <RTClib.h>
 
 #define LED_STRIP_PIN     A3
 #define SERIAL_BAUD_RATE  115200
@@ -40,6 +41,10 @@ uint8_t keyPin[3] = {KEY_PIN_1, KEY_PIN_2, KEY_PIN_3};
 
 uint8_t configNotSaved = 0;
 uint32_t configLastChangeMs = 0;
+
+RTC_DS3231 rtc;
+
+DateTime now, before;
 
 uint8_t font[10][5] = {
   {0x7E, 0x81, 0x81, 0x81, 0x7E}, 
@@ -83,6 +88,20 @@ void setup() {
   configLoad();
   Serial.begin(SERIAL_BAUD_RATE);
   while (!Serial) {};
+
+  if (!rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  } else {
+    Serial.println("RTC found");
+  }
+
+  if (rtc.lostPower()) {
+    Serial.println("RTC lost power, let's set the time!");
+    rtc.adjust(DateTime(2024, 1, 1, 0, 0, 0));
+  }
+
+  
   FastLED.addLeds<WS2811, LED_STRIP_PIN, GRB>(crgbLedsArr, NUM_LEDS);
   FastLED.setBrightness(brightnessLevels[configLevel]);
   FastLED.showColor(CRGB::Black);
@@ -132,6 +151,41 @@ void updateClock(void) {
 }
 
 
+void updateRtc(void) {
+  uint8_t h, m, s;
+  uint8_t d[6];
+  
+  for (uint8_t i = 0; i < 6; i++) {
+    d[i] = digits[i]-'0';
+  }
+  h = d[0] * 10 + d[1];
+  m = d[2] * 10 + d[3];
+  s = d[4] * 10 + d[5];
+  char txt[10];
+  rtc.adjust(DateTime(2024, 1, 1, h, m, s));
+  sprintf(txt, "%02d:%02d:%02d", h, m, s);
+  Serial.print("Time is set to ");
+  Serial.println(txt);
+}
+
+
+void displayRtc(void) {
+
+  for (uint16_t i = 0; i < NUM_LEDS; i++) {
+    crgbLedsArr[i] = CRGB::Black;
+  }
+  
+  putDigit(now.hour()/10, digitPositions[0]);
+  putDigit(now.hour()%10, digitPositions[1]);
+  putDigit(now.minute()/10, digitPositions[2]);
+  putDigit(now.minute()%10, digitPositions[3]);
+  putDigit(now.second()/10, digitPositions[4]);
+  putDigit(now.second()%10, digitPositions[5]);
+  FastLED.show();
+  
+}
+
+
 void processRxBuf() {
   for (uint8_t i = 0; i < 6; i++) {
     digits[i] = 0;
@@ -142,7 +196,8 @@ void processRxBuf() {
       digits[i] = rxBuf[i];
     }
   }
-  updateClock();
+  updateRtc();
+  //updateClock();
 }
 
 
@@ -165,7 +220,8 @@ void doKeyAction(uint8_t key) {
   }
   configNotSaved = 1;
   configLastChangeMs = millis();
-  updateClock();
+  //updateClock();
+  displayRtc();
 }
 
 
@@ -200,6 +256,7 @@ void processEeprom(void) {
 
 
 void loop() {
+   
   if (Serial.available() > 0) {
     uint8_t c = Serial.read();
     if (rxBufPnt < RX_BUF_SIZE) {
@@ -211,6 +268,15 @@ void loop() {
       rxBufPnt = 0;
     }
   }
+
+  now = rtc.now();
+  if (now != before) {
+    displayRtc();
+  }
+
+  before = now;
+
+  
   processKeys();
   processEeprom();
   delay(10);
